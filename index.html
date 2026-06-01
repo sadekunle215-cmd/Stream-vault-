@@ -6,6 +6,8 @@
 <title>StreamVault — Premium Streaming Access</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
   :root {
     --bg: #080b10;
@@ -1008,6 +1010,18 @@
 </div>
 
 <script>
+// ========== FIREBASE INIT ==========
+const firebaseConfig = {
+  apiKey: "AIzaSyCgP0Q0wq_MVMXRf7ox-ur2B0YsUERhcZo",
+  authDomain: "stream-vault-c75ce.firebaseapp.com",
+  projectId: "stream-vault-c75ce",
+  storageBucket: "stream-vault-c75ce.firebasestorage.app",
+  messagingSenderId: "470405953772",
+  appId: "1:470405953772:web:b61b75aa6f684f37d64dc9"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 // ========== CONSTANTS ==========
 const ADMIN_USERNAME = 'Streamvault';
 const ADMIN_PASSWORD = 'Vault1';
@@ -1021,26 +1035,45 @@ let currentUser = null;
 let selectedPlanName = '';
 let selectedPlanPrice = 0;
 let selectedCoinVal = 'BTC';
+let requestsListener = null;
 
-// ========== STORAGE HELPERS ==========
-const getUsers = () => JSON.parse(localStorage.getItem('sv_users') || '{}');
-const saveUsers = u => localStorage.setItem('sv_users', JSON.stringify(u));
-const getLinks = () => JSON.parse(localStorage.getItem('sv_links') || '[]');
-const saveLinks = l => localStorage.setItem('sv_links', JSON.stringify(l));
-const getRequests = () => JSON.parse(localStorage.getItem('sv_requests') || '[]');
-const saveRequests = r => localStorage.setItem('sv_requests', JSON.stringify(r));
+// ========== FIRESTORE HELPERS ==========
+async function getUsers() {
+  const snap = await db.collection('users').get();
+  const users = {};
+  snap.forEach(doc => { users[doc.id] = doc.data(); });
+  return users;
+}
+async function saveUser(email, data) {
+  await db.collection('users').doc(email).set(data, { merge: true });
+}
+async function getLinks() {
+  const snap = await db.collection('links').orderBy('date','asc').get();
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+async function addLinkDoc(data) {
+  await db.collection('links').add(data);
+}
+async function deleteLinkDoc(id) {
+  await db.collection('links').doc(id).delete();
+}
+async function getRequests() {
+  const snap = await db.collection('requests').orderBy('date','asc').get();
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+async function addRequestDoc(data) {
+  await db.collection('requests').add(data);
+}
+async function updateRequestDoc(id, data) {
+  await db.collection('requests').doc(id).update(data);
+}
 
 // ========== INIT ==========
 window.onload = () => {
   buildMarquee();
   checkSession();
   checkPaymentReturn();
-  ensureAdminExists();
 };
-
-function ensureAdminExists() {
-  // Admin credentials are hardcoded — not stored in localStorage
-}
 
 // ========== MARQUEE WITH LOGOS ==========
 function buildMarquee() {
@@ -1144,26 +1177,30 @@ function switchAuth(type) {
   document.getElementById('loginForm').style.display = type === 'login' ? 'block' : 'none';
 }
 
-function doSignup() {
+async function doSignup() {
   const username = document.getElementById('signupUsername').value.trim();
   const email = document.getElementById('signupEmail').value.trim();
   const pass = document.getElementById('signupPass').value;
   const err = document.getElementById('signupError');
   if (!username || !email || pass.length < 6) { err.style.display = 'block'; err.textContent = 'Please fill all fields correctly.'; return; }
-  const users = getUsers();
-  if (users[email]) { err.style.display = 'block'; err.textContent = 'Account already exists. Log in instead.'; return; }
   if (username.toLowerCase() === ADMIN_USERNAME.toLowerCase()) { err.style.display = 'block'; err.textContent = 'That username is reserved.'; return; }
   err.style.display = 'none';
-  users[email] = { username, email, pass, isAdmin: false, plan: null, since: null, renew: null };
-  saveUsers(users);
-  currentUser = users[email];
-  localStorage.setItem('sv_user', JSON.stringify(currentUser));
-  closeModal('authOverlay');
-  if (selectedPlanName) setTimeout(() => openCheckout(), 200);
-  else routeUser();
+  try {
+    const existing = await db.collection('users').doc(email).get();
+    if (existing.exists) { err.style.display = 'block'; err.textContent = 'Account already exists. Log in instead.'; return; }
+    const userData = { username, email, pass, isAdmin: false, plan: null, since: null, renew: null };
+    await saveUser(email, userData);
+    currentUser = userData;
+    localStorage.setItem('sv_user', JSON.stringify(currentUser));
+    closeModal('authOverlay');
+    if (selectedPlanName) setTimeout(() => openCheckout(), 200);
+    else routeUser();
+  } catch(e) {
+    err.style.display = 'block'; err.textContent = 'Error creating account. Try again.';
+  }
 }
 
-function doLogin() {
+async function doLogin() {
   const email = document.getElementById('loginEmail').value.trim();
   const pass = document.getElementById('loginPass').value;
   const err = document.getElementById('loginError');
@@ -1179,20 +1216,23 @@ function doLogin() {
     return;
   }
 
-  // Regular user check
-  const users = getUsers();
-  const user = users[email];
-  if (!user || user.pass !== pass) { err.style.display = 'block'; return; }
-  err.style.display = 'none';
-  currentUser = user;
-  localStorage.setItem('sv_user', JSON.stringify(currentUser));
-  closeModal('authOverlay');
-  if (selectedPlanName) setTimeout(() => openCheckout(), 200);
-  else routeUser();
+  // Regular user — check Firestore
+  try {
+    const doc = await db.collection('users').doc(email).get();
+    if (!doc.exists || doc.data().pass !== pass) { err.style.display = 'block'; return; }
+    err.style.display = 'none';
+    currentUser = doc.data();
+    localStorage.setItem('sv_user', JSON.stringify(currentUser));
+    closeModal('authOverlay');
+    if (selectedPlanName) setTimeout(() => openCheckout(), 200);
+    else routeUser();
+  } catch(e) {
+    err.style.display = 'block';
+  }
 }
 
 function logout() {
-  clearInterval(adminRefreshTimer);
+  if (requestsListener) { requestsListener(); requestsListener = null; }
   currentUser = null; selectedPlanName = ''; selectedPlanPrice = 0;
   localStorage.removeItem('sv_user');
   ['userDash','adminDash'].forEach(id => document.getElementById(id).classList.remove('open'));
@@ -1251,29 +1291,25 @@ async function initiatePayment() {
   } catch(e) {
     status.style.display = 'block';
     status.innerHTML = `
-      <div class="spinner"></div>
-      <div style="font-weight:600;margin-bottom:6px;">Add your NOWPayments API key to enable live payments.</div>
-      <div style="color:var(--muted);font-size:0.8rem;margin-bottom:14px;">Sign up free at <strong style="color:var(--accent)">nowpayments.io</strong></div>
-      <button onclick="demoActivate()" style="background:var(--green);color:#000;border:none;padding:10px 20px;border-radius:8px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.86rem;">
-        Demo: Simulate Payment
-      </button>
+      <div style="color:var(--red);font-weight:600;margin-bottom:6px;">Payment initiation failed.</div>
+      <div style="color:var(--muted);font-size:0.8rem;">Please try again or contact support if the issue persists.</div>
     `;
-    btn.style.display = 'none';
+    btn.disabled = false;
+    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Try Again';
   }
 }
 
-function demoActivate() { activatePlan(selectedPlanName); closeModal('checkoutOverlay'); }
-
-function activatePlan(planName) {
+async function activatePlan(planName) {
   const today = new Date();
   const renew = new Date(today); renew.setMonth(renew.getMonth() + 1);
-  const users = getUsers();
-  if (currentUser && users[currentUser.email]) {
-    users[currentUser.email].plan = planName;
-    users[currentUser.email].since = today.toISOString().split('T')[0];
-    users[currentUser.email].renew = renew.toISOString().split('T')[0];
-    saveUsers(users);
-    currentUser = users[currentUser.email];
+  if (currentUser && currentUser.email) {
+    const updates = {
+      plan: planName,
+      since: today.toISOString().split('T')[0],
+      renew: renew.toISOString().split('T')[0]
+    };
+    await saveUser(currentUser.email, updates);
+    currentUser = { ...currentUser, ...updates };
     localStorage.setItem('sv_user', JSON.stringify(currentUser));
   }
   routeUser();
@@ -1295,7 +1331,7 @@ function renderUserDash() {
   renderUserLinks();
 }
 
-function renderUserLinks() {
+async function renderUserLinks() {
   const grid = document.getElementById('linksGrid');
   if (!currentUser || !currentUser.plan) {
     grid.innerHTML = `<div class="empty-state">
@@ -1305,7 +1341,7 @@ function renderUserLinks() {
     </div>`;
     return;
   }
-  const allLinks = getLinks();
+  const allLinks = await getLinks();
   const userLinks = allLinks.filter(l => l.plans && l.plans.includes(currentUser.plan));
   if (userLinks.length === 0) {
     grid.innerHTML = `<div class="empty-state">
@@ -1355,55 +1391,49 @@ function copyLink(btn, url) {
 }
 
 // ========== REQUEST ==========
-function submitRequest() {
+async function submitRequest() {
   const service = document.getElementById('reqService').value.trim();
   const message = document.getElementById('reqMessage').value.trim();
   const err = document.getElementById('reqError');
   const suc = document.getElementById('reqSuccess');
   if (!service) { err.style.display = 'block'; return; }
   err.style.display = 'none';
-  const requests = getRequests();
-  requests.push({
-    id: Date.now(),
-    user: currentUser.username || currentUser.email,
-    email: currentUser.email,
-    plan: currentUser.plan || 'None',
-    service, message,
-    date: new Date().toISOString().split('T')[0],
-    status: 'new'
-  });
-  saveRequests(requests);
-  suc.style.display = 'block';
-  document.getElementById('reqService').value = '';
-  document.getElementById('reqMessage').value = '';
-  setTimeout(() => { suc.style.display = 'none'; closeModal('requestOverlay'); }, 1800);
+  try {
+    await addRequestDoc({
+      user: currentUser.username || currentUser.email,
+      email: currentUser.email,
+      plan: currentUser.plan || 'None',
+      service, message,
+      date: new Date().toISOString().split('T')[0],
+      status: 'new'
+    });
+    suc.style.display = 'block';
+    document.getElementById('reqService').value = '';
+    document.getElementById('reqMessage').value = '';
+    setTimeout(() => { suc.style.display = 'none'; closeModal('requestOverlay'); }, 1800);
+  } catch(e) {
+    err.textContent = 'Failed to submit. Try again.'; err.style.display = 'block';
+  }
 }
 
 // ========== ADMIN ==========
-let adminRefreshTimer = null;
-
 function renderAdmin() {
   renderAdminStats();
   renderLinksTable();
   renderUsersTable();
   renderRequestsTable();
-  // Auto-refresh every 5 seconds so new requests appear without re-login
-  clearInterval(adminRefreshTimer);
-  adminRefreshTimer = setInterval(() => {
+  // Real-time listener for requests
+  if (requestsListener) requestsListener();
+  requestsListener = db.collection('requests').onSnapshot(() => {
     if (currentUser && currentUser.isAdmin) {
       renderAdminStats();
       renderRequestsTable();
-      renderUsersTable();
-    } else {
-      clearInterval(adminRefreshTimer);
     }
-  }, 5000);
+  });
 }
 
-function renderAdminStats() {
-  const users = getUsers();
-  const links = getLinks();
-  const requests = getRequests();
+async function renderAdminStats() {
+  const [users, links, requests] = await Promise.all([getUsers(), getLinks(), getRequests()]);
   const allUsers = Object.values(users).filter(u => !u.isAdmin);
   const activeUsers = allUsers.filter(u => u.plan);
   const newReqs = requests.filter(r => r.status === 'new');
@@ -1448,7 +1478,7 @@ function togglePlanChip(el) {
   el.classList.toggle('sel');
 }
 
-function uploadLink() {
+async function uploadLink() {
   const name = document.getElementById('upSvcName').value.trim();
   const category = document.getElementById('upCategory').value;
   const link = document.getElementById('upLink').value.trim();
@@ -1462,33 +1492,30 @@ function uploadLink() {
   }
   err.style.display = 'none';
 
-  const links = getLinks();
-  links.push({ id: Date.now(), name, category, link, plans, date: new Date().toISOString().split('T')[0] });
-  saveLinks(links);
+  try {
+    await addLinkDoc({ name, category, link, plans, date: new Date().toISOString().split('T')[0] });
+    document.getElementById('upSvcName').value = '';
+    document.getElementById('upLink').value = '';
+    document.querySelectorAll('.plan-chip').forEach(c => c.classList.remove('sel'));
+    document.querySelector('.plan-chip[data-plan="Mini"]').classList.add('sel');
+    suc.textContent = 'Link uploaded! Users on assigned plans can now see it.';
+    suc.style.display = 'block';
+    setTimeout(() => suc.style.display = 'none', 3000);
+    renderLinksTable();
+    renderAdminStats();
+  } catch(e) {
+    err.textContent = 'Failed to upload. Try again.'; err.style.display = 'block';
+  }
+}
 
-  document.getElementById('upSvcName').value = '';
-  document.getElementById('upLink').value = '';
-  document.querySelectorAll('.plan-chip').forEach(c => c.classList.remove('sel'));
-  document.querySelector('.plan-chip[data-plan="Mini"]').classList.add('sel');
-
-  suc.textContent = 'Link uploaded! Users on assigned plans can now see it.';
-  suc.style.display = 'block';
-  setTimeout(() => suc.style.display = 'none', 3000);
-
+async function deleteLink(id) {
+  await deleteLinkDoc(id);
   renderLinksTable();
   renderAdminStats();
 }
 
-function deleteLink(id) {
-  let links = getLinks();
-  links = links.filter(l => l.id !== id);
-  saveLinks(links);
-  renderLinksTable();
-  renderAdminStats();
-}
-
-function renderLinksTable() {
-  const links = getLinks();
+async function renderLinksTable() {
+  const links = await getLinks();
   const tbody = document.getElementById('linksTableBody');
   if (links.length === 0) {
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">No links uploaded yet.</td></tr>`;
@@ -1502,7 +1529,7 @@ function renderLinksTable() {
       <td style="color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.link}</td>
       <td style="color:var(--muted)">${l.date}</td>
       <td>
-        <button class="btn-del" onclick="deleteLink(${l.id})">
+        <button class="btn-del" onclick="deleteLink('${l.id}')">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
         </button>
       </td>
@@ -1510,8 +1537,9 @@ function renderLinksTable() {
   `).join('');
 }
 
-function renderUsersTable() {
-  const users = Object.values(getUsers()).filter(u => !u.isAdmin);
+async function renderUsersTable() {
+  const usersMap = await getUsers();
+  const users = Object.values(usersMap).filter(u => !u.isAdmin);
   const tbody = document.getElementById('usersTableBody');
   if (users.length === 0) {
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">No users registered yet.</td></tr>`;
@@ -1529,8 +1557,8 @@ function renderUsersTable() {
   `).join('');
 }
 
-function renderRequestsTable() {
-  const requests = getRequests();
+async function renderRequestsTable() {
+  const requests = await getRequests();
   const tbody = document.getElementById('requestsTableBody');
   if (requests.length === 0) {
     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">No requests yet.</td></tr>`;
@@ -1544,16 +1572,15 @@ function renderRequestsTable() {
       <td style="color:var(--muted);max-width:140px">${r.message||'—'}</td>
       <td style="color:var(--muted)">${r.date}</td>
       <td><span class="req-status ${r.status==='new'?'req-new':'req-done'}">${r.status==='new'?'New':'Done'}</span></td>
-      <td>${r.status==='new'?`<button class="btn-mark" onclick="markRequestDone(${r.id})">Mark Done</button>`:'—'}</td>
+      <td>${r.status==='new'?`<button class="btn-mark" onclick="markRequestDone('${r.id}')">Mark Done</button>`:'—'}</td>
     </tr>
   `).join('');
   renderAdminStats();
 }
 
-function markRequestDone(id) {
-  const requests = getRequests();
-  const req = requests.find(r => r.id === id);
-  if (req) { req.status = 'done'; saveRequests(requests); renderRequestsTable(); }
+async function markRequestDone(id) {
+  await updateRequestDoc(id, { status: 'done' });
+  renderRequestsTable();
 }
 
 function scrollTo(id) {
