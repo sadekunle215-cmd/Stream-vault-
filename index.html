@@ -33,8 +33,9 @@
     min-height:100vh;
     overflow-x:hidden;
   }
-  body::before {
-    content:''; position:fixed; inset:0;
+  body::before { content:none; }
+  #mainContent::before {
+    content:''; position:absolute; inset:0;
     background-image: radial-gradient(circle, rgba(255,255,255,0.09) 1px, transparent 1px);
     background-size: 24px 24px;
     pointer-events:none; z-index:0;
@@ -1191,6 +1192,7 @@ function doLogin() {
 }
 
 function logout() {
+  clearInterval(adminRefreshTimer);
   currentUser = null; selectedPlanName = ''; selectedPlanPrice = 0;
   localStorage.removeItem('sv_user');
   ['userDash','adminDash'].forEach(id => document.getElementById(id).classList.remove('open'));
@@ -1378,11 +1380,24 @@ function submitRequest() {
 }
 
 // ========== ADMIN ==========
+let adminRefreshTimer = null;
+
 function renderAdmin() {
   renderAdminStats();
   renderLinksTable();
   renderUsersTable();
   renderRequestsTable();
+  // Auto-refresh every 5 seconds so new requests appear without re-login
+  clearInterval(adminRefreshTimer);
+  adminRefreshTimer = setInterval(() => {
+    if (currentUser && currentUser.isAdmin) {
+      renderAdminStats();
+      renderRequestsTable();
+      renderUsersTable();
+    } else {
+      clearInterval(adminRefreshTimer);
+    }
+  }, 5000);
 }
 
 function renderAdminStats() {
