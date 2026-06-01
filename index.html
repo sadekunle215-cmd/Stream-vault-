@@ -35,8 +35,9 @@
   }
   body::before {
     content:''; position:fixed; inset:0;
-    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events:none; z-index:0; opacity:0.4;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.09) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events:none; z-index:0;
   }
 
   /* ───── NAV ───── */
@@ -748,7 +749,7 @@
   </section>
 
   <footer>
-    <p>© 2025 StreamVault. All rights reserved. &nbsp;|&nbsp; <a href="#">Terms</a> &nbsp;|&nbsp; <a href="#">Privacy</a></p>
+    <p>© 2025 StreamVault. All rights reserved. &nbsp;|&nbsp; <a href="#" onclick="openLegal('terms')">Terms</a> &nbsp;|&nbsp; <a href="#" onclick="openLegal('privacy')">Privacy</a></p>
     <p style="margin-top:5px;">Powered by NOWPayments — Secure &amp; Anonymous Crypto Checkout</p>
   </footer>
 </div>
@@ -1089,8 +1090,31 @@ function checkPaymentReturn() {
   }
 }
 
+function updateNav() {
+  const btns = document.getElementById('navBtns');
+  if (currentUser) {
+    btns.innerHTML = `
+      <span style="font-size:0.82rem;color:var(--muted);font-weight:500">${currentUser.username || currentUser.email.split('@')[0]}</span>
+      <button class="btn-ghost" onclick="logout()" style="padding:7px 14px;font-size:0.8rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Log Out
+      </button>`;
+  } else {
+    btns.innerHTML = `
+      <button class="btn-ghost" onclick="openModal('login')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        <span>Log In</span>
+      </button>
+      <button class="btn-primary" onclick="openModal('signup')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        Get Started
+      </button>`;
+  }
+}
+
 function routeUser() {
   hidePage('mainContent');
+  updateNav();
   if (currentUser.isAdmin) { showPage('adminDash'); renderAdmin(); }
   else { showPage('userDash'); renderUserDash(); }
 }
@@ -1143,8 +1167,9 @@ function doLogin() {
   const pass = document.getElementById('loginPass').value;
   const err = document.getElementById('loginError');
 
-  // Hardcoded admin check
-  if (email === ADMIN_EMAIL && pass === ADMIN_PASSWORD) {
+  // Hardcoded admin check — accept username OR email
+  const isAdmin = (email.toLowerCase() === ADMIN_EMAIL.toLowerCase() || email.toLowerCase() === ADMIN_USERNAME.toLowerCase());
+  if (isAdmin && pass === ADMIN_PASSWORD) {
     currentUser = { username: ADMIN_USERNAME, email: ADMIN_EMAIL, isAdmin: true, plan: null };
     localStorage.setItem('sv_user', JSON.stringify(currentUser));
     err.style.display = 'none';
@@ -1171,6 +1196,7 @@ function logout() {
   ['userDash','adminDash'].forEach(id => document.getElementById(id).classList.remove('open'));
   const mc = document.getElementById('mainContent');
   mc.style.display = ''; mc.classList.remove('open');
+  updateNav();
 }
 
 // ========== PLAN SELECTION ==========
@@ -1520,5 +1546,103 @@ function scrollTo(id) {
   if (el) el.scrollIntoView({behavior:'smooth'});
 }
 </script>
+
+<!-- TERMS MODAL -->
+<div class="modal-overlay" id="termsOverlay">
+  <div class="modal" style="max-width:620px;max-height:85vh;overflow-y:auto;padding:36px 28px;">
+    <button class="modal-close" onclick="closeModal('termsOverlay')">&#x2715;</button>
+    <h3 style="font-family:'Inter',sans-serif;font-weight:700;font-size:1.25rem;margin-bottom:6px;">Terms of Service</h3>
+    <p class="sub">Last updated: January 2025</p>
+    <div style="color:var(--muted);font-size:0.875rem;line-height:1.75;display:flex;flex-direction:column;gap:18px;">
+      <div>
+        <strong style="color:var(--text);display:block;margin-bottom:5px;">1. Acceptance of Terms</strong>
+        By accessing or using StreamVault, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our service.
+      </div>
+      <div>
+        <strong style="color:var(--text);display:block;margin-bottom:5px;">2. Service Description</strong>
+        StreamVault provides access to premium streaming service links following subscription purchase. All links are provided for personal, non-commercial use only. We do not host, own, or operate any of the streaming platforms listed.
+      </div>
+      <div>
+        <strong style="color:var(--text);display:block;margin-bottom:5px;">3. Payments & Subscriptions</strong>
+        All payments are processed via NOWPayments in cryptocurrency. Subscriptions are billed on a monthly basis. Membership activates upon confirmed payment. Due to the nature of digital goods, all sales are final and non-refundable once access has been granted.
+      </div>
+      <div>
+        <strong style="color:var(--text);display:block;margin-bottom:5px;">4. Account Responsibility</strong>
+        You are responsible for maintaining the confidentiality of your account credentials. You agree not to share your account or streaming links with any third party. Any misuse may result in immediate account termination without refund.
+      </div>
+      <div>
+        <strong style="color:var(--text);display:block;margin-bottom:5px;">5. Prohibited Activities</strong>
+        You may not resell, redistribute, or share access to StreamVault content. You may not attempt to reverse-engineer or tamper with the platform. Any abusive, fraudulent, or illegal activity will result in permanent suspension.
+      </div>
+      <div>
+        <strong style="color:var(--text);display:block;margin-bottom:5px;">6. Service Availability</strong>
+        StreamVault strives for 99% uptime but does not guarantee uninterrupted access. Links may occasionally be updated or rotated. We are not responsible for downtime caused by third-party streaming platforms.
+      </div>
+      <div>
+        <strong style="color:var(--text);display:block;margin-bottom:5px;">7. Termination</strong>
+        We reserve the right to suspend or terminate any account that violates these terms, at our sole discretion, with or without prior notice.
+      </div>
+      <div>
+        <strong style="color:var(--text);display:block;margin-bottom:5px;">8. Changes to Terms</strong>
+        StreamVault reserves the right to modify these terms at any time. Continued use of the service after changes constitutes acceptance of the updated terms.
+      </div>
+      <div>
+        <strong style="color:var(--text);display:block;margin-bottom:5px;">9. Contact</strong>
+        For any questions regarding these terms, please reach out via the support request feature on your dashboard.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRIVACY MODAL -->
+<div class="modal-overlay" id="privacyOverlay">
+  <div class="modal" style="max-width:620px;max-height:85vh;overflow-y:auto;padding:36px 28px;">
+    <button class="modal-close" onclick="closeModal('privacyOverlay')">&#x2715;</button>
+    <h3 style="font-family:'Inter',sans-serif;font-weight:700;font-size:1.25rem;margin-bottom:6px;">Privacy Policy</h3>
+    <p class="sub">Last updated: January 2025</p>
+    <div style="color:var(--muted);font-size:0.875rem;line-height:1.75;display:flex;flex-direction:column;gap:18px;">
+      <div>
+        <strong style="color:var(--text);display:block;margin-bottom:5px;">1. Information We Collect</strong>
+        We collect only the information necessary to provide our service: your username, email address, and subscription status. We do not collect payment details — all transactions are handled directly by NOWPayments.
+      </div>
+      <div>
+        <strong style="color:var(--text);display:block;margin-bottom:5px;">2. How We Use Your Information</strong>
+        Your information is used solely to manage your account, deliver your streaming links, and communicate service updates. We do not use your data for advertising or sell it to any third party.
+      </div>
+      <div>
+        <strong style="color:var(--text);display:block;margin-bottom:5px;">3. Data Storage</strong>
+        Account data is stored locally in your browser (localStorage) and is not transmitted to external servers unless required for payment processing. We do not maintain a central user database.
+      </div>
+      <div>
+        <strong style="color:var(--text);display:block;margin-bottom:5px;">4. Cookies</strong>
+        StreamVault does not use tracking cookies. Session data is managed via browser localStorage for authentication purposes only.
+      </div>
+      <div>
+        <strong style="color:var(--text);display:block;margin-bottom:5px;">5. Third-Party Services</strong>
+        We use NOWPayments to process cryptocurrency payments. Their privacy policy governs how they handle your transaction data. We are not responsible for third-party data practices.
+      </div>
+      <div>
+        <strong style="color:var(--text);display:block;margin-bottom:5px;">6. Crypto Payments & Anonymity</strong>
+        We accept cryptocurrency payments to protect your financial privacy. We do not store or have access to your wallet addresses or transaction details beyond what is necessary for subscription verification.
+      </div>
+      <div>
+        <strong style="color:var(--text);display:block;margin-bottom:5px;">7. Your Rights</strong>
+        You have the right to request deletion of your account and associated data at any time by contacting us through the dashboard support request feature. Since data is stored locally, clearing your browser's localStorage will also remove your data.
+      </div>
+      <div>
+        <strong style="color:var(--text);display:block;margin-bottom:5px;">8. Children's Privacy</strong>
+        StreamVault is not intended for users under the age of 13. We do not knowingly collect data from minors.
+      </div>
+      <div>
+        <strong style="color:var(--text);display:block;margin-bottom:5px;">9. Changes to This Policy</strong>
+        We may update this Privacy Policy from time to time. Any changes will be reflected on this page with an updated date.
+      </div>
+      <div>
+        <strong style="color:var(--text);display:block;margin-bottom:5px;">10. Contact</strong>
+        For any privacy-related concerns, please use the support request feature in your member dashboard.
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
