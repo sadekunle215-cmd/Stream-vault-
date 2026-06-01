@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>StreamVault — Premium Streaming Access</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 <style>
   :root {
@@ -49,7 +49,7 @@
     gap:12px;
   }
   .logo {
-    font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800;
+    font-family:'Inter',sans-serif; font-size:1.2rem; font-weight:700;
     letter-spacing:-0.5px; cursor:pointer; flex-shrink:0;
   }
   .logo span { color:var(--accent); }
@@ -96,9 +96,9 @@
   }
   @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.3)} }
   .hero h1 {
-    font-family:'Syne',sans-serif;
-    font-size:clamp(2.4rem,8vw,5.2rem);
-    font-weight:800; line-height:1.06; letter-spacing:-1.5px;
+    font-family:'Inter',sans-serif;
+    font-size:clamp(2rem,7vw,4rem);
+    font-weight:700; line-height:1.1; letter-spacing:-0.5px;
     animation:fadeUp 0.6s 0.1s ease both;
   }
   .hero h1 .highlight {
@@ -153,8 +153,8 @@
   .plans-section { padding:0 24px 88px; max-width:1100px; margin:0 auto; }
   .section-label { text-align:center; margin-bottom:52px; }
   .section-label h2 {
-    font-family:'Syne',sans-serif; font-size:clamp(1.7rem,4vw,2.8rem);
-    font-weight:800; letter-spacing:-0.8px; margin-bottom:10px;
+    font-family:'Inter',sans-serif; font-size:clamp(1.4rem,3.5vw,2.2rem);
+    font-weight:700; letter-spacing:-0.3px; margin-bottom:10px;
   }
   .section-label p { color:var(--muted); font-size:0.95rem; font-weight:400; }
   .plans-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
@@ -179,11 +179,11 @@
   .plan-card:nth-child(2) .plan-glow { background:rgba(0,229,255,0.1); }
   .plan-card:nth-child(3) .plan-glow { background:rgba(245,197,66,0.08); }
   .plan-name {
-    font-family:'Syne',sans-serif; font-size:0.8rem; font-weight:700;
+    font-family:'Inter',sans-serif; font-size:0.8rem; font-weight:700;
     letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:14px;
   }
   .plan-price { display:flex; align-items:flex-end; gap:3px; margin-bottom:4px; }
-  .plan-price .amount { font-family:'Syne',sans-serif; font-size:2.8rem; font-weight:800; line-height:1; color:var(--text); }
+  .plan-price .amount { font-family:'Inter',sans-serif; font-size:2.4rem; font-weight:700; line-height:1; color:var(--text); }
   .plan-price .currency { font-size:1.1rem; font-weight:600; color:var(--accent); margin-bottom:7px; }
   .plan-period { color:var(--muted); font-size:0.82rem; margin-bottom:24px; }
   .plan-divider { height:1px; background:var(--border); margin-bottom:20px; }
@@ -230,8 +230,8 @@
   .how-section { padding:0 24px 88px; max-width:900px; margin:0 auto; }
   .how-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
   .how-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:26px; }
-  .how-num { font-family:'Syne',sans-serif; font-size:1.8rem; font-weight:800; color:var(--border); margin-bottom:14px; }
-  .how-title { font-family:'Syne',sans-serif; font-weight:700; font-size:1rem; margin-bottom:7px; }
+  .how-num { font-family:'Inter',sans-serif; font-size:1.8rem; font-weight:800; color:var(--border); margin-bottom:14px; }
+  .how-title { font-family:'Inter',sans-serif; font-weight:700; font-size:1rem; margin-bottom:7px; }
   .how-desc { color:var(--muted); font-size:0.85rem; line-height:1.65; }
 
   /* ───── MODAL ───── */
@@ -249,7 +249,7 @@
     margin:auto;
   }
   .modal h3 {
-    font-family:'Syne',sans-serif; font-size:1.45rem; font-weight:800;
+    font-family:'Inter',sans-serif; font-size:1.3rem; font-weight:700;
     margin-bottom:7px; letter-spacing:-0.4px;
   }
   .modal p.sub { color:var(--muted); font-size:0.875rem; margin-bottom:26px; }
@@ -295,8 +295,8 @@
     border-radius:11px; padding:16px 18px; margin-bottom:22px;
     display:flex; align-items:center; justify-content:space-between;
   }
-  .checkout-plan-summary .plan-nm { font-family:'Syne',sans-serif; font-size:1.05rem; font-weight:700; }
-  .checkout-plan-summary .plan-prc { font-family:'Syne',sans-serif; font-size:1.35rem; font-weight:800; color:var(--accent); }
+  .checkout-plan-summary .plan-nm { font-family:'Inter',sans-serif; font-size:1.05rem; font-weight:700; }
+  .checkout-plan-summary .plan-prc { font-family:'Inter',sans-serif; font-size:1.35rem; font-weight:800; color:var(--accent); }
   .crypto-select-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-bottom:22px; }
   .crypto-opt {
     background:var(--card2); border:2px solid var(--border);
@@ -337,7 +337,7 @@
     display:flex; align-items:center; justify-content:space-between;
     margin-bottom:28px; flex-wrap:wrap; gap:12px;
   }
-  .dash-header h2 { font-family:'Syne',sans-serif; font-size:1.7rem; font-weight:800; letter-spacing:-0.4px; }
+  .dash-header h2 { font-family:'Inter',sans-serif; font-size:1.5rem; font-weight:700; letter-spacing:-0.2px; }
   .dash-header h2 span { color:var(--accent); }
   .plan-badge {
     background:rgba(0,229,255,0.1); border:1px solid rgba(0,229,255,0.25);
@@ -392,7 +392,7 @@
     display:flex; align-items:center; justify-content:space-between;
     gap:14px; flex-wrap:wrap;
   }
-  .request-info h4 { font-family:'Syne',sans-serif; font-weight:700; font-size:0.95rem; margin-bottom:5px; }
+  .request-info h4 { font-family:'Inter',sans-serif; font-weight:700; font-size:0.95rem; margin-bottom:5px; }
   .request-info p { color:var(--muted); font-size:0.84rem; }
   .btn-request {
     background:transparent; border:1px solid var(--accent); color:var(--accent);
@@ -426,7 +426,7 @@
     border-radius:15px; padding:26px; margin-bottom:22px;
   }
   .upload-form h4 {
-    font-family:'Syne',sans-serif; font-weight:700; font-size:0.95rem;
+    font-family:'Inter',sans-serif; font-weight:700; font-size:0.95rem;
     margin-bottom:18px; display:flex; align-items:center; gap:7px;
   }
   .form-row { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
@@ -493,7 +493,7 @@
   .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:13px; margin-bottom:22px; }
   .stat-card { background:var(--card); border:1px solid var(--border); border-radius:11px; padding:18px; }
   .stat-label { color:var(--muted); font-size:0.76rem; margin-bottom:7px; display:flex; align-items:center; gap:5px; }
-  .stat-val { font-family:'Syne',sans-serif; font-size:1.7rem; font-weight:800; }
+  .stat-val { font-family:'Inter',sans-serif; font-size:1.6rem; font-weight:700; }
   .stat-val.c-accent { color:var(--accent); }
   .stat-val.c-green { color:var(--green); }
   .stat-val.c-gold { color:var(--gold); }
@@ -963,7 +963,7 @@
     <button class="modal-close" onclick="closeModal('checkoutOverlay')">
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
-    <h3 style="font-family:'Syne',sans-serif;font-size:1.35rem;font-weight:800;margin-bottom:5px;">Complete Purchase</h3>
+    <h3 style="font-family:'Inter',sans-serif;font-size:1.35rem;font-weight:800;margin-bottom:5px;">Complete Purchase</h3>
     <p style="color:var(--muted);font-size:0.85rem;margin-bottom:22px;">Select your preferred crypto to pay via NOWPayments</p>
     <div class="checkout-plan-summary">
       <div><div class="plan-nm" id="ckPlanName">—</div><div style="color:var(--muted);font-size:0.77rem;">Monthly Membership</div></div>
@@ -1008,7 +1008,9 @@
 <script>
 // ========== CONSTANTS ==========
 const ADMIN_USERNAME = 'Streamvault';
-const NP_API_KEY = 'YOUR_NOWPAYMENTS_API_KEY';
+const ADMIN_PASSWORD = 'Vault1';
+const ADMIN_EMAIL    = 'admin@streamvault.com';
+const NP_API_KEY = 'D6CT75E-V434536-MMK9RZR-AQ7363Z';
 const NP_SUCCESS_URL = window.location.origin + window.location.pathname + '?payment=success';
 const NP_CANCEL_URL = window.location.origin + window.location.pathname + '?payment=cancel';
 
@@ -1035,17 +1037,7 @@ window.onload = () => {
 };
 
 function ensureAdminExists() {
-  const users = getUsers();
-  if (!users['admin@streamvault.com']) {
-    users['admin@streamvault.com'] = {
-      username: ADMIN_USERNAME,
-      email: 'admin@streamvault.com',
-      pass: 'Vault1',
-      isAdmin: true,
-      plan: null, since: null, renew: null
-    };
-    saveUsers(users);
-  }
+  // Admin credentials are hardcoded — not stored in localStorage
 }
 
 // ========== MARQUEE WITH LOGOS ==========
@@ -1150,6 +1142,18 @@ function doLogin() {
   const email = document.getElementById('loginEmail').value.trim();
   const pass = document.getElementById('loginPass').value;
   const err = document.getElementById('loginError');
+
+  // Hardcoded admin check
+  if (email === ADMIN_EMAIL && pass === ADMIN_PASSWORD) {
+    currentUser = { username: ADMIN_USERNAME, email: ADMIN_EMAIL, isAdmin: true, plan: null };
+    localStorage.setItem('sv_user', JSON.stringify(currentUser));
+    err.style.display = 'none';
+    closeModal('authOverlay');
+    routeUser();
+    return;
+  }
+
+  // Regular user check
   const users = getUsers();
   const user = users[email];
   if (!user || user.pass !== pass) { err.style.display = 'block'; return; }
@@ -1157,7 +1161,7 @@ function doLogin() {
   currentUser = user;
   localStorage.setItem('sv_user', JSON.stringify(currentUser));
   closeModal('authOverlay');
-  if (!currentUser.isAdmin && selectedPlanName) setTimeout(() => openCheckout(), 200);
+  if (selectedPlanName) setTimeout(() => openCheckout(), 200);
   else routeUser();
 }
 
@@ -1210,8 +1214,7 @@ async function initiatePayment() {
         order_id: 'SV_' + Date.now(),
         order_description: 'StreamVault ' + selectedPlanName + ' Plan',
         success_url: NP_SUCCESS_URL,
-        cancel_url: NP_CANCEL_URL,
-        ipn_callback_url: 'https://yourdomain.com/api/nowpayments-webhook'
+        cancel_url: NP_CANCEL_URL
       })
     });
     const data = await res.json();
